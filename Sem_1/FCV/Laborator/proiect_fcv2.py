@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from email.policy import default
+from tkinter import image_names
 import cv2 as cv
 import os
 import tkinter.filedialog as tk
@@ -18,7 +18,23 @@ if not configList:
     sys.exit("Error: The configuration list is empty!")
 
 #functions section
-def augment(image, augmentsVector):
+def removeFormat(imageFormat: str):
+    if imageFormat.endswith('.png'):
+        imageFormat.replace('.png', '')
+        return True
+    elif imageFormat.endswith('.jpg'):
+        imageFormat.replace('.jpg', '')
+        return False
+    
+
+def formatImageName(imageFormat: str):
+    if removeFormat(imageFormat):
+        newFormat = imageFormat + '_aug.png' 
+    else:
+        newFormat = imageFormat + '_aug.jpg'
+    return newFormat
+
+def augment(image: cv.Mat, augmentsVector: list[str], imageName: str):
     iterator = 0
     #iterate through the augmentation array    
     for augment in augmentsVector:
@@ -30,18 +46,24 @@ def augment(image, augmentsVector):
                 iterator += 1
                 #apply the augmentation
                 rotated_image = cv.rotate(image, augment.get('dummy'))
+                if removeFormat(imageName):
+                    augmentedImageName = output_dir + imageName + 'dummy{iterator:05d}.png'
+                else:
+                    augmentedImageName = output_dir + imageName + 'dummy{iterator:05d}.jpg'
                 #write augmented image to the output directory.
-                cv.imwrite(output_dir + image + augment + iterator, rotated_image)
+                cv.imwrite(augmentedImageName, image)
                 break
-                
-def augmentFile(path, augments):
+
+def augmentFile(path: str, augments: list[str]):
     #open file, read them as an image and the call the augment procedure. After
     #that write the augmented image to the output directory.
     image = cv.imread(path)
-    if not image:
+    if image is None:
         sys.exit("Error: Could not read the image!")
-    augment(image, augments)
-    writeValue = cv.imwrite(output_dir + path + '_aug', image)
+    imageName = formatImageName(path)
+    augment(image, augments, path)
+    newFileName = output_dir + imageName
+    writeValue = cv.imwrite(newFileName, image)
     if not writeValue:
         sys.exit("Error: Could not save the augmented image!")
 
@@ -63,6 +85,6 @@ if not filesList:
 # iterate through every file
 for file in os.listdir():
     # iterate through each file
-    if file.endswith('.txt') or file.endswith('.png'):
+    if file.endswith('.jpg') or file.endswith('.png'):
         #call the augmentation procedure
-        augmentFile(file, configs['DEFAULT'])
+        augmentFile(file, configList)
