@@ -50,10 +50,11 @@ def augment(image: cv.Mat, augmentsVector: cp.SectionProxy, imageName: str):
                 print(rotate_value)
                 rotated_image = cv.rotate(image, int(rotate_value))
                 if removeFormat(imageName):
-                    stripImageFormat = imageName
-                    augmentedImageName = output_dir + imageName + 'dummy{}.png'.format(iterator)
+                    stripImageFormat = imageName.rstrip('.png')
+                    augmentedImageName = output_dir + stripImageFormat + augment + '{}.png'.format(iterator)
                 else:
-                    augmentedImageName = output_dir + imageName + 'dummy{}.jpg'.format(iterator)
+                    stripImageFormat = imageName.rstrip('.jpg')
+                    augmentedImageName = output_dir + stripImageFormat + augment + '{}.jpg'.format(iterator)
                 #write augmented image to the output directory.
                 cv.imwrite(augmentedImageName, image)
                 break
