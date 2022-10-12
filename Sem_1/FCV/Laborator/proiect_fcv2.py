@@ -13,43 +13,47 @@ output_dir = "/home/supreme/Master/Sem_1/FCV/Laborator/output_folder/"
 
 #read the configurations
 configs = cp.ConfigParser()
-configList = configs.read(config_file)
-if not configList:
+configs.read(config_file)
+configSection = configs['DEFAULT']
+if not configSection:
     sys.exit("Error: The configuration list is empty!")
 
 #functions section
 def removeFormat(imageFormat: str):
-    if imageFormat.endswith('.png'):
-        imageFormat.replace('.png', '')
+    if hasattr(imageFormat, '.png'):
         return True
-    elif imageFormat.endswith('.jpg'):
-        imageFormat.replace('.jpg', '')
+    elif hasattr(imageFormat, '.jpg'):
         return False
-    
 
 def formatImageName(imageFormat: str):
     if removeFormat(imageFormat):
-        newFormat = imageFormat + '_aug.png' 
+        stripImageFormat = imageFormat.rstrip('.png')
+        newFormat = stripImageFormat + '_aug.png' 
     else:
-        newFormat = imageFormat + '_aug.jpg'
+        stripImageFormat = imageFormat.rstrip('.jpg')
+        newFormat = stripImageFormat + '_aug.jpg'
     return newFormat
 
-def augment(image: cv.Mat, augmentsVector: list[str], imageName: str):
+def augment(image: cv.Mat, augmentsVector: cp.SectionProxy, imageName: str):
     iterator = 0
     #iterate through the augmentation array    
     for augment in augmentsVector:
         #make a match-case statement to check which 
         #augmentation it is.
+        print(augment)
         match augment:
             case 'dummy':
                 #increase the index
                 iterator += 1
                 #apply the augmentation
-                rotated_image = cv.rotate(image, augment.get('dummy'))
+                rotate_value = augmentsVector.get('dummy')
+                print(rotate_value)
+                rotated_image = cv.rotate(image, int(rotate_value))
                 if removeFormat(imageName):
-                    augmentedImageName = output_dir + imageName + 'dummy{iterator:05d}.png'
+                    stripImageFormat = imageName
+                    augmentedImageName = output_dir + imageName + 'dummy{}.png'.format(iterator)
                 else:
-                    augmentedImageName = output_dir + imageName + 'dummy{iterator:05d}.jpg'
+                    augmentedImageName = output_dir + imageName + 'dummy{}.jpg'.format(iterator)
                 #write augmented image to the output directory.
                 cv.imwrite(augmentedImageName, image)
                 break
@@ -87,4 +91,4 @@ for file in os.listdir():
     # iterate through each file
     if file.endswith('.jpg') or file.endswith('.png'):
         #call the augmentation procedure
-        augmentFile(file, configList)
+        augmentFile(file, configSection)
