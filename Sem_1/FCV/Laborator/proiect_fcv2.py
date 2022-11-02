@@ -57,7 +57,7 @@ def augment(image: cv.Mat, augmentsVector: cp.SectionProxy, imageName: str):
                     augmentedImageName = output_dir + stripImageFormat + augment + '{}.jpg'.format(iterator)
                 #write augmented image to the output directory.
                 cv.imwrite(augmentedImageName, image)
-                break
+                break!
 
 def augmentFile(path: str, augments: list[str]):
     #open file, read them as an image and the call the augment procedure. After

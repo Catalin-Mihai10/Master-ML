@@ -4,23 +4,19 @@ import sys
 from matplotlib import pyplot as plt
 
 def adjustBrightness(image: cv.Mat, brightness:int):
-
     copyImage = np.array(image)
     height, width, channels = copyImage.shape
+    
     for i in range(height):
         for j in range(width):
             copyImage[i, j] += brightness
-
-    cv.imshow('Old image', image)
-    cv.waitKey()
-    cv.imshow('New image', copyImage)
-    cv.waitKey()
+    
+    return new_image
 
 def blurImage(image: cv.Mat):
     sigma = 4
     imageBlur = cv.GaussianBlur(image, (5,5), sigma)
-    cv.imshow('Blured image', imageBlur)
-    cv.waitKey()
+    return imageBlur
 
 def myBlurImage(image: cv.Mat) :
     #create new image
@@ -30,7 +26,7 @@ def myBlurImage(image: cv.Mat) :
     height, width, channels = image.shape
 
     #pad the image
-    paddedImage = np.pad(image, ((0, 4), (0, 4), (0, 0)), mode='edge')
+    paddedImage = np.pad(image, ((4, 4), (4, 4), (0, 0)), mode='edge')
 
     #define a Gaussian Kernel
     gaussianKernel = np.array([[1, 2, 3, 2, 1],
@@ -38,23 +34,22 @@ def myBlurImage(image: cv.Mat) :
                                [3, 5, 9, 5, 3],
                                [2, 4, 5, 4, 2],
                                [1, 2, 3, 2, 1]])
-    gaussianKernel = np.divide(gaussianKernel, np.sum(gaussianKernel))
+
     gaussianKernel = np.expand_dims(gaussianKernel, axis=2)
+    gaussianKernel = gaussianKernel / np.sum(gaussianKernel)
     gaussianKernel = np.dstack((gaussianKernel, gaussianKernel, gaussianKernel))
     for i in range(height):
         for j in range(width):
-            bluredImage[i, j] = np.sum(paddedImage[i:i+5, j:j+5] * gaussianKernel, axis=(0, 1))
-    cv.imshow('Blured image', bluredImage)
-    cv.waitKey()
+            bluredImage[i, j] = np.sum(paddedImage[i:i+5, j:j+5] * gaussianKernel, axis=(0,1))
 
+    return bluredImage
 def edgeDetection(image: cv.Mat):
     kernel = np.array([[-1, -1, -1],
                        [-1, 8, -1],
                        [-1, -1, -1]])
     depth = -1
     edgeDetectionImage = cv.filter2D(image, depth, kernel)
-    cv.imshow('Edge Detection', edgeDetectionImage)
-    cv.waitKey()
+    return edgeDetectionImage
 
 def opencvTranslation(image: cv.Mat,  newX: int, newY: int):
     #define translation matrix
@@ -65,7 +60,7 @@ def opencvTranslation(image: cv.Mat,  newX: int, newY: int):
     cv.waitKey()
 
 def translation(image: cv.Mat, newX: int, newY: int):
-    #get the height, width and channels of the image
+     #get the height, width and channels of the image
     height, width, channels = image.shape
     #define the translation matrix
     # shape should be of form:
@@ -75,9 +70,8 @@ def translation(image: cv.Mat, newX: int, newY: int):
     for i in range(newY, height):
         for j in range(newX, width):
             translatedImage[i, j] = image[i - newY, j - newX]
-                
-    cv.imshow('Translated image', translatedImage)
-    cv.waitKey()
+
+    return translatedImage
 
 def scaling(image: cv.Mat, new_scale: float):
     #get the height, width and channels of the image
@@ -86,8 +80,7 @@ def scaling(image: cv.Mat, new_scale: float):
     newWidth = int((width * new_scale) / 100)
 
     scaledImage = cv.resize(image, (newHeight, newWidth), interpolation= cv.INTER_AREA)
-    cv.imshow('Scaled image', scaledImage)
-    cv.waitKey()
+    return scaledImage
 
 def shearing(image: cv.Mat, x: int, y: int):
     #get the height, width and channels of the image
@@ -101,20 +94,5 @@ def shearing(image: cv.Mat, x: int, y: int):
                          [y, 1, 0],
                          [0, 0, 1]])
     shearedImageX = cv.warpPerspective(image, matrixX, (int(width * (1 + y)), int(height * (1 + x))));
-    cv.imshow('Sheared image on X axis', shearedImageX)
-    cv.waitKey()
     shearedImageY = cv.warpPerspective(image, matrixY, (int(width * (1 + y)), int(height * (1 + x))));
-    cv.imshow('Sheared image on Y axis', shearedImageY)
-    cv.waitKey()
-
-image_path_folder = "/home/supreme/Master/Sem_1/FCV/Laborator/test_folder/854110.jpg"
-image = cv.imread(image_path_folder)
-
-#adjustBrightness(image, 10)
-#blurImage(image)
-#edgeDetection(image)
-#translation(image, 10, 10)
-opencvTranslation(image, 10, 10)
-#scaling(image, 1.6)
-#shearing(image, 0.3, 0.3)
-#myBlurImage(image)
+    return (shearedImageX, shearedImageY)
