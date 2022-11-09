@@ -8,11 +8,9 @@ import sys
 import configparser as cp
 import proiect_fcv3 as augFun
 
-# Global variables
 config_file = "/home/supreme/Master/Sem_1/FCV/Laborator/project.ini"
 output_dir = "/home/supreme/Master/Sem_1/FCV/Laborator/output_folder/"
 
-#read the configurations
 configs = cp.ConfigParser()
 configs.read(config_file)
 for section in configs.sections():
@@ -24,7 +22,6 @@ for section in configs.sections():
 if not dictionary:
     sys.exit("Error: The configuration list is empty!")
 
-#functions section
 def removeFormat(imageFormat: str):
     if hasattr(imageFormat, '.png'):
         return True
@@ -42,25 +39,22 @@ def formatImageName(imageFormat: str):
 
 def augment(image: cv.Mat, augmentsVector: dict[str, str], imageName: str):
     iterator = 0
-    #iterate through the augmentation array
+
     for key in augmentsVector.keys():
-        #make a match-case statement to check which 
-        #augmentation it is.
+
         print(key)
         match key:
             case 'brightness':
-                #increase the index
                 iterator += 1
-                #apply the augmentation
-                rotated_image = augFun.adjustBrightness(image, int(augmentsVector[key]))
+                brightnessAdjustedImage = augFun.adjustBrightness(image, int(augmentsVector[key]))
                 if removeFormat(imageName):
                     stripImageFormat = imageName.rstrip('.png')
                     augmentedImageName = output_dir + stripImageFormat + key + '{}.png'.format(iterator)
                 else:
                     stripImageFormat = imageName.rstrip('.jpg')
                     augmentedImageName = output_dir + stripImageFormat + key + '{}.jpg'.format(iterator)
-                #write augmented image to the output directory.
-                cv.imwrite(augmentedImageName, image)
+
+                cv.imwrite(augmentedImageName, brightnessAdjustedImage)
             case 'blur':
                 iterator += 1
                 
@@ -72,13 +66,13 @@ def augment(image: cv.Mat, augmentsVector: dict[str, str], imageName: str):
                     else:
                         stripImageFormat = imageName.rstrip('.jpg')
                         augmentedImageName = output_dir + stripImageFormat + key + '{}.jpg'.format(iterator)
-                    #write augmented image to the output directory.
-                    cv.imwrite(augmentedImageName, image)
+
+                    cv.imwrite(augmentedImageName, blurImage)
             case 'edge':
                 iterator += 1
 
                 if(bool(dictionary[key]) == True):
-                    edgeDetection = augFun.edgeDetection(image)
+                    edgeDetectionImage = augFun.edgeDetection(image)
 
                     if removeFormat(imageName):
                         stripImageFormat = imageName.rstrip('.png')
@@ -86,8 +80,8 @@ def augment(image: cv.Mat, augmentsVector: dict[str, str], imageName: str):
                     else:
                         stripImageFormat = imageName.rstrip('.jpg')
                         augmentedImageName = output_dir + stripImageFormat + key + '{}.jpg'.format(iterator)
-                    #write augmented image to the output directory.
-                    cv.imwrite(augmentedImageName, image)
+
+                    cv.imwrite(augmentedImageName, edgeDetectionImage)
             case 'translation':
                 iterator += 1
 
@@ -102,8 +96,8 @@ def augment(image: cv.Mat, augmentsVector: dict[str, str], imageName: str):
                 else:
                     stripImageFormat = imageName.rstrip('.jpg')
                     augmentedImageName = output_dir + stripImageFormat + key + '{}.jpg'.format(iterator)
-                #write augmented image to the output directory.
-                cv.imwrite(augmentedImageName, image)
+
+                cv.imwrite(augmentedImageName, translatedImage)
             case 'scaling':
                 iterator += 1
 
@@ -114,8 +108,8 @@ def augment(image: cv.Mat, augmentsVector: dict[str, str], imageName: str):
                 else:
                     stripImageFormat = imageName.rstrip('.jpg')
                     augmentedImageName = output_dir + stripImageFormat + key + '{}.jpg'.format(iterator)
-                #write augmented image to the output directory.
-                cv.imwrite(augmentedImageName, image)
+
+                cv.imwrite(augmentedImageName, scaledImage)
             case 'shearing':
                 iterator += 1
 
@@ -127,16 +121,17 @@ def augment(image: cv.Mat, augmentsVector: dict[str, str], imageName: str):
                 
                 if removeFormat(imageName):
                     stripImageFormat = imageName.rstrip('.png')
-                    augmentedImageName = output_dir + stripImageFormat + key + '{}.png'.format(iterator)
+                    augmentedImageNameX = output_dir + stripImageFormat + key + 'X' + '{}.png'.format(iterator)
+                    augmentedImageNameY = output_dir + stripImageFormat + key + 'Y' + '{}.png'.format(iterator)
                 else:
                     stripImageFormat = imageName.rstrip('.jpg')
-                    augmentedImageName = output_dir + stripImageFormat + key + '{}.jpg'.format(iterator)
-                #write augmented image to the output directory.
-                cv.imwrite(augmentedImageName, image)
+                    augmentedImageNameX = output_dir + stripImageFormat + key + 'X' + '{}.jpg'.format(iterator)
+                    augmentedImageNameY = output_dir + stripImageFormat + key + 'Y' + '{}.jpg'.format(iterator)
+
+                cv.imwrite(augmentedImageNameX, shearedImageOnX)
+                cv.imwrite(augmentedImageNameY, shearedImageOnX)
 
 def augmentFile(path: str, augments: dict[str, str]):
-    #open file, read them as an image and the call the augment procedure. After
-    #that write the augmented image to the output directory.
     image = cv.imread(path)
     if image is None:
         sys.exit("Error: Could not read the image!")
@@ -147,24 +142,18 @@ def augmentFile(path: str, augments: dict[str, str]):
     if not writeValue:
         sys.exit("Error: Could not save the augmented image!")
 
-# create new window
 root = tk.Tk()
 root.withdraw()
-# ask for directory selection
 images_directory = tk.askdirectory()
 if images_directory is None:
     sys.exit("Error: Could not save the augmented image!")
 root.destroy()
 
-#go to the selected directory
 os.chdir(images_directory)
 filesList = os.listdir()
 if not filesList:
     sys.exit("Error: There are no files in the directory!")
-
-# iterate through every file
+print(filesList)
 for file in os.listdir():
-    # iterate through each file
     if file.endswith('.jpg') or file.endswith('.png'):
-        #call the augmentation procedure
         augmentFile(file, dictionary)
